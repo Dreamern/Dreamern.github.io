@@ -184,16 +184,30 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <h1 id="摘要"><a href="#摘要" class="headerlink" title="摘要"></a>摘要</h1><p>Masked image modeling(MIM)任务通过修复破损的图像patch在自监督表达学习中产生了很好的结果。然而，大部分已有的研究主要针对低层次的图像像素，忽略了表达模型中的高层次语义信息。本文工作中，我们提出使用语义丰富的视觉tokenizer(分词器)作为重构目标，提供了系统的方式将MIM从像素层推进到语义层。特别的，我们提出向量量化(vector-quantized)知识蒸馏来训练分词器，从而将连续的语义空间离散为压缩的编码。之后我们预训练了ViT，通过预测被掩盖图像patches的原始视觉tokens。进而，我们引入了patch聚合策略，将离散图像关联起来以增强全局的语义表达。图像分类和语义分割实验结果表明BEiTv2表现优于所有对比的MIM方法。在ImageNet-1K(224)上，基础大小的BEiTv2实现了85.5%的top-1精确度for fine-tuning和80.1%的top-1精确度for linear probing。大尺寸的BEiTv2在ImageNet-1K fine-tuning上获得了87.3%的top-1精确度，在语义分割的ADE20K上获得了56.7%的mIoU。</p>
-<h1 id="1-Introduction"><a href="#1-Introduction" class="headerlink" title="1 Introduction"></a>1 Introduction</h1><p>根据重构目标，现有的MIM方法大致分为3类：</p>
+          <h1 id="摘要">摘要</h1>
+<p>Masked image
+modeling(MIM)任务通过修复破损的图像patch在自监督表达学习中产生了很好的结果。然而，大部分已有的研究主要针对低层次的图像像素，忽略了表达模型中的高层次语义信息。本文工作中，我们提出使用语义丰富的视觉tokenizer(分词器)作为重构目标，提供了系统的方式将MIM从像素层推进到语义层。特别的，我们提出向量量化(vector-quantized)知识蒸馏来训练分词器，从而将连续的语义空间离散为压缩的编码。之后我们预训练了ViT，通过预测被掩盖图像patches的原始视觉tokens。进而，我们引入了patch聚合策略，将离散图像关联起来以增强全局的语义表达。图像分类和语义分割实验结果表明BEiTv2表现优于所有对比的MIM方法。在ImageNet-1K(224)上，基础大小的BEiTv2实现了85.5%的top-1精确度for
+fine-tuning和80.1%的top-1精确度for linear
+probing。大尺寸的BEiTv2在ImageNet-1K
+fine-tuning上获得了87.3%的top-1精确度，在语义分割的ADE20K上获得了56.7%的mIoU。</p>
+<h1 id="introduction">1 Introduction</h1>
+<p>根据重构目标，现有的MIM方法大致分为3类：</p>
 <ul>
 <li>低层次的图像元素（如像素）</li>
 <li>人工特征（如HOG特征）</li>
 <li>视觉tokens</li>
 </ul>
-<p>然而所有的重构目标显式或隐式地关于低层次图像元素，因此低估了高层次的语义信息。作为对比，语言模型中的masked words是关于高层次语义的，这促使我们通过在预训练阶段利用语义感知监督来挖掘MIM的潜力。</p>
-<p>本文工作中提出了BEiTv2，目的是通过构建semantic-aware 视觉分词器来改进MIM预训练。基于BEiT开发，创新点在于引入了Vector-Quantized Knowledge Distillation(VQ-KD, 向量量化知识蒸馏)算法来离散化语义空间。VQ-KD编码器首先根据可学习的codebook将输入图像转化为离散的tokens，然后在tokens的条件下，解码器学习重构由teacher model编码的语义特征。在训练VQ-KD后，其编码器被用作BEiT预训练的语义数视觉tokenizer，即将离散编码作为监督符号。</p>
-<p>考虑到tokens的离散性，我们进一步引入了patch聚合策略，显式地鼓励[CLS] token关联所有patches(Gao &amp; Callan, 2021)。这种策略解决了MIM将patch重建放在首位而削弱全局图像表达学习的问题。线性探测实验结果表明，BEIT V2提高了学习图像表达的能力。此外，强化后的表达也提高了其他任务的性能。</p>
+<p>然而所有的重构目标显式或隐式地关于低层次图像元素，因此低估了高层次的语义信息。作为对比，语言模型中的masked
+words是关于高层次语义的，这促使我们通过在预训练阶段利用语义感知监督来挖掘MIM的潜力。</p>
+<p>本文工作中提出了BEiTv2，目的是通过构建semantic-aware
+视觉分词器来改进MIM预训练。基于BEiT开发，创新点在于引入了Vector-Quantized
+Knowledge Distillation(VQ-KD,
+向量量化知识蒸馏)算法来离散化语义空间。VQ-KD编码器首先根据可学习的codebook将输入图像转化为离散的tokens，然后在tokens的条件下，解码器学习重构由teacher
+model编码的语义特征。在训练VQ-KD后，其编码器被用作BEiT预训练的语义数视觉tokenizer，即将离散编码作为监督符号。</p>
+<p>考虑到tokens的离散性，我们进一步引入了patch聚合策略，显式地鼓励[CLS]
+token关联所有patches(Gao &amp; Callan,
+2021)。这种策略解决了MIM将patch重建放在首位而削弱全局图像表达学习的问题。线性探测实验结果表明，BEIT
+V2提高了学习图像表达的能力。此外，强化后的表达也提高了其他任务的性能。</p>
 <p>有两个尺寸的模型：base-size and large-size</p>
 <p>本工作贡献总结如下：</p>
 <ul>
@@ -201,35 +215,141 @@
 <li>引入patch聚合策略，它在给定离散语义tokens的情况下加强了全局结构，并改进了学习到的表达的性能。</li>
 <li>开展下游任务的扩展实验</li>
 </ul>
-<h1 id="2-Methodology"><a href="#2-Methodology" class="headerlink" title="2 Methodology"></a>2 Methodology</h1><p>BEITv2继承了BEIT定义的MIM框架，使用视觉分词器将每张图片转化为离散的视觉tokens。训练目标是修复被掩盖的视觉tokens，每个token对应一个图像patch。</p>
+<h1 id="methodology">2 Methodology</h1>
+<p>BEITv2继承了BEIT定义的MIM框架，使用视觉分词器将每张图片转化为离散的视觉tokens。训练目标是修复被掩盖的视觉tokens，每个token对应一个图像patch。</p>
 <p>Section2.2引入了向量量化知识蒸馏VQ-KD算法，被用来训练视觉分词器。</p>
 <p>Section2.3在patch聚合策略的帮助下，将视觉分词器应用到BEIT中。</p>
-<h2 id="2-1-Image-Representation"><a href="#2-1-Image-Representation" class="headerlink" title="2.1 Image Representation"></a>2.1 Image Representation</h2><p>ViTs用作backbone network</p>
-<p>$\pmb{x}^p$: $\pmb{x}^{patch}$</p>
-<p>输入图像$\pmb{x} \in \mathbb{R}^{H \times W \times C}$被reshape为$N&#x3D;HW&#x2F;P^2$个patches，${\pmb{x}<em>i^p}</em>{i&#x3D;1}^N$，$\pmb{x}^p \in \mathbb{R}^{N\times(P^2C)}$</p>
-<p>每张$224 \times 224$的图像被分割为$14 \times 14$的网格，每个patch大小为$16 \times 16$</p>
-<p>然后${\pmb{x}<em>i^p}</em>{i&#x3D;1}^N$被展平并线性映射到输入embeddings，送入Transformer。编码后的向量被定义为${\pmb{h}<em>i}</em>{i&#x3D;1}^N$，对应于N个图像patches。</p>
-<p>$N&#x3D;196$</p>
-<h2 id="2-2-Training-Visual-Tokenizer"><a href="#2-2-Training-Visual-Tokenizer" class="headerlink" title="2.2 Training Visual Tokenizer"></a>2.2 Training Visual Tokenizer</h2><p>我们提出了VQ-KD算法来训练视觉分词器。如下图，视觉分词器和decoder是两个关键模块。</p>
-<p><img src="/2023/02/07/BEITv2/image-20230116105118598.png" alt="image-20230116105118598"></p>
-<p>视觉分词器：将图像映射为一系列视觉tokens（即离散编码）。如将图像$\pmb{x}$分词为$\pmb{z}&#x3D;[z_1, z_2, …, z_N] \in \mathcal{V}^{(H&#x2F;P) \times (W&#x2F;P)}$，其中视觉词典(codebook)$\mathcal{V} \in \mathbb{R}^{K \times D}$包括$K$个离散的codebook embeddings</p>
-<p>视觉分词器包括一个ViT编码器和一个量化器(quantizer)。分词器首先将输入图像编码为向量，然后向量量化器在codebook中为每个patch表达$\pmb{h}_i$查找最接近的编码。用${\pmb{v}_1, \pmb{v}_2, …, \pmb{v}_K}$表示codebook中的embeddings。对于第$i$个图像patch，其量化编码可以用下式计算($z_i$是与$\pmb{h}_i$最接近的$\pmb{v}_j$的索引)：<br>$$<br>z_i &#x3D; \text{argmin}_j ||\ell_2(\pmb{h}_i) - \ell_2(\pmb{v}_j)||_2 \tag1<br>$$<br>其中，$j \in {1, 2, …, K}$和$\ell_2$正则化用作codebook查找。(Yu et al., 2021)</p>
-<p>在将图像量化为视觉tokens后，将$\ell_2$正则化后的codebook embeddings${\ell_2(\pmb{v}<em>{z_i})}</em>{i&#x3D;1}^N$输入到decoder。</p>
-<p>decoder也是多层的Transformer，输出向量${\pmb{o}<em>i}</em>{i&#x3D;1}^N$的目标是重构一个teacher model的语义特征，如DINO和CLIP。令$\pmb{t}_i$表示teacher model关于第$i$个图像patch的特征向量。训练的目标是最大化decoder输出$\pmb{o}_i$和teacher guidance $\pmb{t}_i$的余弦相似度。</p>
-<p>因为量化过程(Eq.(1))不可微，所以梯度直接从decoder的输入拷贝到encoder的输出来反向传播梯度。直观看来，量化器为每个编码器输出查找最近的编码，而codebook embeddings的梯度指出了编码器的优化方向。</p>
-<p>VQ-KD的训练目标定义为<br>$$<br>\max \sum_{x\in \mathcal{D}} \sum_{i&#x3D;1}^N \cos(\pmb{o}_i, \pmb{t}_i) - ||\text{sg}[\ell_2(\pmb{h}<em>i)] - \ell_2(\pmb{v}</em>{z_i})||_2^2 - ||\ell_2(\pmb{h}<em>i) - \text{sg}[\ell_2(\pmb{v}</em>{z_i})]||	\tag2<br>$$<br>$\text{sg}[\cdot]$表示stop-gradient操作符，前向传播时为恒等，反向传播时为0。$\mathcal{D}$表示用于分词器训练的图像数据。</p>
+<h2 id="image-representation">2.1 Image Representation</h2>
+<p>ViTs用作backbone network</p>
+<p><span class="math inline">\(\pmb{x}^p\)</span>: <span
+class="math inline">\(\pmb{x}^{patch}\)</span></p>
+<p>输入图像<span class="math inline">\(\pmb{x} \in \mathbb{R}^{H \times
+W \times C}\)</span>被reshape为<span
+class="math inline">\(N=HW/P^2\)</span>个patches，<span
+class="math inline">\(\{\pmb{x}_i^p\}_{i=1}^N\)</span>，<span
+class="math inline">\(\pmb{x}^p \in
+\mathbb{R}^{N\times(P^2C)}\)</span></p>
+<p>每张<span class="math inline">\(224 \times
+224\)</span>的图像被分割为<span class="math inline">\(14 \times
+14\)</span>的网格，每个patch大小为<span class="math inline">\(16 \times
+16\)</span></p>
+<p>然后<span
+class="math inline">\(\{\pmb{x}_i^p\}_{i=1}^N\)</span>被展平并线性映射到输入embeddings，送入Transformer。编码后的向量被定义为<span
+class="math inline">\(\{\pmb{h}_i\}_{i=1}^N\)</span>，对应于N个图像patches。</p>
+<p><span class="math inline">\(N=196\)</span></p>
+<h2 id="training-visual-tokenizer">2.2 Training Visual Tokenizer</h2>
+<p>我们提出了VQ-KD算法来训练视觉分词器。如下图，视觉分词器和decoder是两个关键模块。</p>
+<figure>
+<img src="image-20230116105118598.png" alt="image-20230116105118598" />
+<figcaption aria-hidden="true">image-20230116105118598</figcaption>
+</figure>
+<p>视觉分词器：将图像映射为一系列视觉tokens（即离散编码）。如将图像<span
+class="math inline">\(\pmb{x}\)</span>分词为<span
+class="math inline">\(\pmb{z}=[z_1, z_2, ..., z_N] \in
+\mathcal{V}^{(H/P) \times (W/P)}\)</span>，其中视觉词典(codebook)<span
+class="math inline">\(\mathcal{V} \in \mathbb{R}^{K \times
+D}\)</span>包括<span class="math inline">\(K\)</span>个离散的codebook
+embeddings</p>
+<p>视觉分词器包括一个ViT编码器和一个量化器(quantizer)。分词器首先将输入图像编码为向量，然后向量量化器在codebook中为每个patch表达<span
+class="math inline">\(\pmb{h}_i\)</span>查找最接近的编码。用<span
+class="math inline">\(\{\pmb{v}_1, \pmb{v}_2, ...,
+\pmb{v}_K\}\)</span>表示codebook中的embeddings。对于第<span
+class="math inline">\(i\)</span>个图像patch，其量化编码可以用下式计算(<span
+class="math inline">\(z_i\)</span>是与<span
+class="math inline">\(\pmb{h}_i\)</span>最接近的<span
+class="math inline">\(\pmb{v}_j\)</span>的索引)： <span
+class="math display">\[
+z_i = \text{argmin}_j ||\ell_2(\pmb{h}_i) - \ell_2(\pmb{v}_j)||_2 \tag1
+\]</span> 其中，<span class="math inline">\(j \in \{1, 2, ...,
+K\}\)</span>和<span
+class="math inline">\(\ell_2\)</span>正则化用作codebook查找。(Yu et al.,
+2021)</p>
+<p>在将图像量化为视觉tokens后，将<span
+class="math inline">\(\ell_2\)</span>正则化后的codebook embeddings<span
+class="math inline">\(\{\ell_2(\pmb{v}_{z_i})\}_{i=1}^N\)</span>输入到decoder。</p>
+<p>decoder也是多层的Transformer，输出向量<span
+class="math inline">\(\{\pmb{o}_i\}_{i=1}^N\)</span>的目标是重构一个teacher
+model的语义特征，如DINO和CLIP。令<span
+class="math inline">\(\pmb{t}_i\)</span>表示teacher model关于第<span
+class="math inline">\(i\)</span>个图像patch的特征向量。训练的目标是最大化decoder输出<span
+class="math inline">\(\pmb{o}_i\)</span>和teacher guidance <span
+class="math inline">\(\pmb{t}_i\)</span>的余弦相似度。</p>
+<p>因为量化过程(Eq.(1))不可微，所以梯度直接从decoder的输入拷贝到encoder的输出来反向传播梯度。直观看来，量化器为每个编码器输出查找最近的编码，而codebook
+embeddings的梯度指出了编码器的优化方向。</p>
+<p>VQ-KD的训练目标定义为 <span class="math display">\[
+\max \sum_{x\in \mathcal{D}} \sum_{i=1}^N \cos(\pmb{o}_i, \pmb{t}_i) -
+||\text{sg}[\ell_2(\pmb{h}_i)] - \ell_2(\pmb{v}_{z_i})||_2^2 -
+||\ell_2(\pmb{h}_i) - \text{sg}[\ell_2(\pmb{v}_{z_i})]||  \tag2
+\]</span> <span
+class="math inline">\(\text{sg}[\cdot]\)</span>表示stop-gradient操作符，前向传播时为恒等，反向传播时为0。<span
+class="math inline">\(\mathcal{D}\)</span>表示用于分词器训练的图像数据。</p>
 <p><strong>Improving codebook utilization</strong></p>
-<p>向量量化训练的一个常见问题是codebook collapse。换句话说，只使用了一小部分编码。经验策略(van den<br>Oord et al., 2017; Yu et al., 2021)可以用来缓解这个问题。Eq.(1)展示了我们在计算$\ell_2$正则化距离来寻找最近编码的同时将codebook embedding空间的维度缩减到32-d。低维codebook embeddings在送入decoder之前被映射为高维空间。指数移动平均(van den Oord et al., 2017)被用于更新codebook embeddings。对于VQ-KD训练，指数移动平均趋于更稳定。</p>
-<h2 id="2-3-Pretraining-BEIT-v2"><a href="#2-3-Pretraining-BEIT-v2" class="headerlink" title="2.3 Pretraining BEIT v2"></a>2.3 Pretraining BEIT v2</h2><p>沿用BEIT的MIM设置来预训练ViT的图像表达。</p>
-<p>输入图像$x$，使用block-wisely选择40%的的图像patches进行掩盖，掩盖位置记为$\mathcal{M}$。</p>
-<p>使用一个共享的可学习的embedding $\pmb{e}_{[M]}$来替换原始图像中需要被掩盖的patch embedding$\pmb{e}_i^p$(如果$i \in \mathcal{M}$)</p>
-<p>随后，我们将一个可学习的[CLS] token加到输入最前的位置，即$[\pmb{e}_{CLS}, {\pmb{x}<em>i^{\mathcal{M}}}</em>{i&#x3D;1}^N]$，然后送入ViT。最终的编码向量表示为${\pmb{h}<em>i}</em>{i&#x3D;0}^N$，$\pmb{h}_0$对应[CLS] token。</p>
-<p>接下来，将MIM头实例化为全连接层，使用它根据破损的图像$\pmb{x}^{\mathcal{M}}$去预测被掩盖位置的视觉tokens。对于每个被掩盖位置$i \in \mathcal{M}$，使用softmax分类器去预测视觉tokens $p(z_i|\pmb{h}<em>i) &#x3D; \text{softmax}</em>{z_i}(\pmb{W}_c\pmb{h}_i+\pmb{b}_c)$，$\pmb{W}_c, \pmb{b}_c$分别表示MIM头的权重和偏置。</p>
-<p>MIM的训练损失定义如下：<br>$$<br>\mathcal{L}<em>{MIM} &#x3D; - \sum</em>{x \in \mathcal{D}} \sum_{i \in \mathcal{M}} \log p(z_i|\pmb{x}_i^{\mathcal{M}})	\tag3<br>$$<br>$z_i$表示原始图像的视觉tokens，$\mathcal{D}$是预训练图像。本工作中视觉tokens的数量与图像patches的数量相等。</p>
+<p>向量量化训练的一个常见问题是codebook
+collapse。换句话说，只使用了一小部分编码。经验策略(van den Oord et al.,
+2017; Yu et al., 2021)可以用来缓解这个问题。Eq.(1)展示了我们在计算<span
+class="math inline">\(\ell_2\)</span>正则化距离来寻找最近编码的同时将codebook
+embedding空间的维度缩减到32-d。低维codebook
+embeddings在送入decoder之前被映射为高维空间。指数移动平均(van den Oord
+et al., 2017)被用于更新codebook
+embeddings。对于VQ-KD训练，指数移动平均趋于更稳定。</p>
+<h2 id="pretraining-beit-v2">2.3 Pretraining BEIT v2</h2>
+<p>沿用BEIT的MIM设置来预训练ViT的图像表达。</p>
+<p>输入图像<span
+class="math inline">\(x\)</span>，使用block-wisely选择40%的的图像patches进行掩盖，掩盖位置记为<span
+class="math inline">\(\mathcal{M}\)</span>。</p>
+<p>使用一个共享的可学习的embedding <span
+class="math inline">\(\pmb{e}_{[M]}\)</span>来替换原始图像中需要被掩盖的patch
+embedding<span class="math inline">\(\pmb{e}_i^p\)</span>(如果<span
+class="math inline">\(i \in \mathcal{M}\)</span>)</p>
+<p>随后，我们将一个可学习的[CLS] token加到输入最前的位置，即<span
+class="math inline">\([\pmb{e}_{CLS},
+\{\pmb{x}_i^{\mathcal{M}}\}_{i=1}^N]\)</span>，然后送入ViT。最终的编码向量表示为<span
+class="math inline">\(\{\pmb{h}_i\}_{i=0}^N\)</span>，<span
+class="math inline">\(\pmb{h}_0\)</span>对应[CLS] token。</p>
+<p>接下来，将MIM头实例化为全连接层，使用它根据破损的图像<span
+class="math inline">\(\pmb{x}^{\mathcal{M}}\)</span>去预测被掩盖位置的视觉tokens。对于每个被掩盖位置<span
+class="math inline">\(i \in
+\mathcal{M}\)</span>，使用softmax分类器去预测视觉tokens <span
+class="math inline">\(p(z_i|\pmb{h}_i) =
+\text{softmax}_{z_i}(\pmb{W}_c\pmb{h}_i+\pmb{b}_c)\)</span>，<span
+class="math inline">\(\pmb{W}_c,
+\pmb{b}_c\)</span>分别表示MIM头的权重和偏置。</p>
+<p>MIM的训练损失定义如下： <span class="math display">\[
+\mathcal{L}_{MIM} = - \sum_{x \in \mathcal{D}} \sum_{i \in \mathcal{M}}
+\log p(z_i|\pmb{x}_i^{\mathcal{M}}) \tag3
+\]</span> <span
+class="math inline">\(z_i\)</span>表示原始图像的视觉tokens，<span
+class="math inline">\(\mathcal{D}\)</span>是预训练图像。本工作中视觉tokens的数量与图像patches的数量相等。</p>
 <p><strong>Pretraining global representation</strong></p>
-<p>受(Gao &amp; Callan, 2021)启发，我们预训练了[CLS] token 用于全局图像表达。其目的是减少patch级预训练和图像级表达聚合之间的差异。如图3所示，构造了一个表达瓶颈来鼓励[CLS] token尽可能收集更多的信息。对于$L$层的Transformer，令${\pmb{h}<em>i^l}</em>{i&#x3D;1}^N$表示第$l$层的输出向量，$l \in {1, 2, …, L}$。为了训练最后一层的[CLS] token $\pmb{h}<em>{CLS}^L$，我们将它和中间第$l$层的patch向量${\pmb{h}<em>i^l}</em>{i&#x3D;1}^N$连接起来，组成$\pmb{S} &#x3D; [\pmb{h}</em>{CLS}^L, \pmb{h}_1^l, …, \pmb{h}<em>N^l]$。将$\pmb{S}$送入一个浅层的（如2层）Transformer解码器并再次执行掩盖预测$p(\pmb{z}|\pmb{S}) &#x3D; \text{softmax}</em>{\pmb{z}}(\pmb{W}<em>c\pmb{S}+\pmb{b}<em>c)$。注意，MIM头的参数是共享的，因此掩盖位置的MIM损失也用Eq.(3)计算。最终的训练损失为两个MIM损失的和。<br>$$<br>\mathcal{L} &#x3D; \mathcal{L}</em>{MIM} + \mathcal{L}</em>{MIM}^C<br>$$<br><img src="/2023/02/07/BEITv2/image-20230206185239938.png" alt="image-20230206185239938"></p>
-<p>直观地，该模型倾向于将全局信息放到$\pmb{h}_{CLS}^L$，因为该模型倾向于完全利用从第$l+1$层到第$L$层的参数，以减少额外的MIM损耗。信息流瓶颈促使[CLS] token向更可靠的全局表达靠近，而不是未经训练的tokens。此外，强化后的表达还便于各种下游任务。请注意，新添加的浅层解码器仅用于预训练[CLS] token，该解码器在预训练之后被丢弃。</p>
-<h1 id="5-Conclusion"><a href="#5-Conclusion" class="headerlink" title="5 Conclusion"></a>5 Conclusion</h1><p>我们提出向量量化知识蒸馏（VQ-KD）来为ViT Transformer预训练来训练视觉分词器。VQ-KD离散化了连续语义空间，该语义空间为掩盖图像建模提供监督，而不是依赖于图像像素。语义视觉分词器极大地改善了BEIT的预训练，显著提高了其在图像分类、语义分割等后续任务中的迁移性能。此外，还引入了一种patch聚合机制，以明确地鼓励模型生成全局图像表达，从而缩小patch层预训练和图像层表达聚合之间的差距。将来，我们希望学习一种通用的分词器，将单词和图像映射到同一个词汇表中，这样我们就可以在视觉语言预训练中进行掩盖预测。</p>
+<p>受(Gao &amp; Callan, 2021)启发，我们预训练了[CLS] token
+用于全局图像表达。其目的是减少patch级预训练和图像级表达聚合之间的差异。如图3所示，构造了一个表达瓶颈来鼓励[CLS]
+token尽可能收集更多的信息。对于<span
+class="math inline">\(L\)</span>层的Transformer，令<span
+class="math inline">\(\{\pmb{h}_i^l\}_{i=1}^N\)</span>表示第<span
+class="math inline">\(l\)</span>层的输出向量，<span
+class="math inline">\(l \in \{1, 2, ...,
+L\}\)</span>。为了训练最后一层的[CLS] token <span
+class="math inline">\(\pmb{h}_{CLS}^L\)</span>，我们将它和中间第<span
+class="math inline">\(l\)</span>层的patch向量<span
+class="math inline">\(\{\pmb{h}_i^l\}_{i=1}^N\)</span>连接起来，组成<span
+class="math inline">\(\pmb{S} = [\pmb{h}_{CLS}^L, \pmb{h}_1^l, ...,
+\pmb{h}_N^l]\)</span>。将<span
+class="math inline">\(\pmb{S}\)</span>送入一个浅层的（如2层）Transformer解码器并再次执行掩盖预测<span
+class="math inline">\(p(\pmb{z}|\pmb{S}) =
+\text{softmax}_{\pmb{z}}(\pmb{W}_c\pmb{S}+\pmb{b}_c)\)</span>。注意，MIM头的参数是共享的，因此掩盖位置的MIM损失也用Eq.(3)计算。最终的训练损失为两个MIM损失的和。
+<span class="math display">\[
+\mathcal{L} = \mathcal{L}_{MIM} + \mathcal{L}_{MIM}^C
+\]</span> <img src="image-20230206185239938.png"
+alt="image-20230206185239938" /></p>
+<p>直观地，该模型倾向于将全局信息放到<span
+class="math inline">\(\pmb{h}_{CLS}^L\)</span>，因为该模型倾向于完全利用从第<span
+class="math inline">\(l+1\)</span>层到第<span
+class="math inline">\(L\)</span>层的参数，以减少额外的MIM损耗。信息流瓶颈促使[CLS]
+token向更可靠的全局表达靠近，而不是未经训练的tokens。此外，强化后的表达还便于各种下游任务。请注意，新添加的浅层解码器仅用于预训练[CLS]
+token，该解码器在预训练之后被丢弃。</p>
+<h1 id="conclusion">5 Conclusion</h1>
+<p>我们提出向量量化知识蒸馏（VQ-KD）来为ViT
+Transformer预训练来训练视觉分词器。VQ-KD离散化了连续语义空间，该语义空间为掩盖图像建模提供监督，而不是依赖于图像像素。语义视觉分词器极大地改善了BEIT的预训练，显著提高了其在图像分类、语义分割等后续任务中的迁移性能。此外，还引入了一种patch聚合机制，以明确地鼓励模型生成全局图像表达，从而缩小patch层预训练和图像层表达聚合之间的差距。将来，我们希望学习一种通用的分词器，将单词和图像映射到同一个词汇表中，这样我们就可以在视觉语言预训练中进行掩盖预测。</p>
 
       
     </div>
@@ -287,19 +407,29 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for more info. If you get any problems when using Hexo, you can find the answer in <a target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or you can ask me on <a target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
-<h2 id="Quick-Start"><a href="#Quick-Start" class="headerlink" title="Quick Start"></a>Quick Start</h2><h3 id="Create-a-new-post"><a href="#Create-a-new-post" class="headerlink" title="Create a new post"></a>Create a new post</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
-<h3 id="Run-server"><a href="#Run-server" class="headerlink" title="Run server"></a>Run server</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
-
+          <p>Welcome to <a target="_blank" rel="noopener" href="https://hexo.io/">Hexo</a>! This is your very
+first post. Check <a target="_blank" rel="noopener" href="https://hexo.io/docs/">documentation</a> for
+more info. If you get any problems when using Hexo, you can find the
+answer in <a
+target="_blank" rel="noopener" href="https://hexo.io/docs/troubleshooting.html">troubleshooting</a> or
+you can ask me on <a
+target="_blank" rel="noopener" href="https://github.com/hexojs/hexo/issues">GitHub</a>.</p>
+<h2 id="quick-start">Quick Start</h2>
+<h3 id="create-a-new-post">Create a new post</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo new <span class="string">&quot;My New Post&quot;</span></span><br></pre></td></tr></table></figure>
+<p>More info: <a
+target="_blank" rel="noopener" href="https://hexo.io/docs/writing.html">Writing</a></p>
+<h3 id="run-server">Run server</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo server</span><br></pre></td></tr></table></figure>
 <p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/server.html">Server</a></p>
-<h3 id="Generate-static-files"><a href="#Generate-static-files" class="headerlink" title="Generate static files"></a>Generate static files</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
-<h3 id="Deploy-to-remote-sites"><a href="#Deploy-to-remote-sites" class="headerlink" title="Deploy to remote sites"></a>Deploy to remote sites</h3><figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
-
-<p>More info: <a target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
+<h3 id="generate-static-files">Generate static files</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo generate</span><br></pre></td></tr></table></figure>
+<p>More info: <a
+target="_blank" rel="noopener" href="https://hexo.io/docs/generating.html">Generating</a></p>
+<h3 id="deploy-to-remote-sites">Deploy to remote sites</h3>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">$ hexo deploy</span><br></pre></td></tr></table></figure>
+<p>More info: <a
+target="_blank" rel="noopener" href="https://hexo.io/docs/one-command-deployment.html">Deployment</a></p>
 
       
     </div>
