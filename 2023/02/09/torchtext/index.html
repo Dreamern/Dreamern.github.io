@@ -31,7 +31,7 @@
 <meta property="og:image" content="http://example.com/2023/02/09/torchtext/image-20230112163114539.png">
 <meta property="og:image" content="http://example.com/2023/02/09/torchtext/image-20230112163114539.png">
 <meta property="article:published_time" content="2023-02-09T06:01:32.000Z">
-<meta property="article:modified_time" content="2023-02-09T06:18:03.558Z">
+<meta property="article:modified_time" content="2023-02-10T03:27:41.098Z">
 <meta property="article:author" content="John Doe">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="http://example.com/2023/02/09/torchtext/image-20230112163114539.png">
@@ -292,10 +292,16 @@ mjx-container[display="true"] + br {
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2023-02-09 14:01:32 / Modified: 14:18:03" itemprop="dateCreated datePublished" datetime="2023-02-09T14:01:32+08:00">2023-02-09</time>
+              <time title="Created: 2023-02-09 14:01:32" itemprop="dateCreated datePublished" datetime="2023-02-09T14:01:32+08:00">2023-02-09</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-02-10 11:27:41" itemprop="dateModified" datetime="2023-02-10T11:27:41+08:00">2023-02-10</time>
+              </span>
 
           
 
@@ -438,8 +444,8 @@ mjx-container[display="true"] + br {
 <blockquote>
 <p>squential：数据是否为序列数据，默认为Ture。如果为False，则不能使用分词。</p>
 <p>use_vocab：是否使用词典，默认为True。如果为False，那么输入的数据类型必须是数值类型(即使用vocab转换后的)。</p>
-<p>init_token：文本的起始字符，默认为None。</p>
-<p>eos_token：文本的结束字符，默认为None。</p>
+<p>init_token：文本的起始字符，默认为None。若有指定token则将该token添加到句子头部</p>
+<p>eos_token：文本的结束字符，默认为None。若有指定token则将该token添加到句子尾部</p>
 <p>fix_length：所有样本的长度，不够则使用pad_token补全。默认为None，表示灵活长度。</p>
 <p>tensor_type：把数据转换成的tensor类型 默认值为torch.LongTensor。</p>
 <p>preprocessing：预处理pipeline，
