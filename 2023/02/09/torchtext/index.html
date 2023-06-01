@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 6.3.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/all.min.css">
+
+<script id="hexo-configurations">
+    var NexT = window.NexT || {};
+    var CONFIG = {"hostname":"example.com","root":"/","scheme":"Muse","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":false,"show_result":false,"style":null},"back2top":{"enable":true,"sidebar":false,"scrollpercent":false},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
+  </script>
+
+  <meta name="description" content="将一个纯文本数据(比如一个 txt 文本)， 变成一个模型可接受的数据（比如一个 embedding 序列），就用到了torchtext。 用torchtext处理文本数据的流程如下图所示（以判断句子情感为例）。  API一览 123456torchtext.data.Example : 用来表示一个样本，数据+标签torchtext.vocab.Vocab: 词汇表相关torchtext.dat">
+<meta property="og:type" content="article">
+<meta property="og:title" content="torchtext">
+<meta property="og:url" content="http://example.com/2023/02/09/torchtext/index.html">
+<meta property="og:site_name" content="Hexo">
+<meta property="og:description" content="将一个纯文本数据(比如一个 txt 文本)， 变成一个模型可接受的数据（比如一个 embedding 序列），就用到了torchtext。 用torchtext处理文本数据的流程如下图所示（以判断句子情感为例）。  API一览 123456torchtext.data.Example : 用来表示一个样本，数据+标签torchtext.vocab.Vocab: 词汇表相关torchtext.dat">
+<meta property="og:locale" content="en_US">
+<meta property="og:image" content="http://example.com/2023/02/09/torchtext/image-20230112163114539.png">
+<meta property="og:image" content="http://example.com/2023/02/09/torchtext/image-20230112163114539.png">
+<meta property="og:image" content="http://example.com/2023/02/09/torchtext/image-20230112163114539.png">
+<meta property="article:published_time" content="2023-02-09T06:01:32.000Z">
+<meta property="article:modified_time" content="2023-02-10T03:27:41.098Z">
+<meta property="article:author" content="John Doe">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="http://example.com/2023/02/09/torchtext/image-20230112163114539.png">
+
+<link rel="canonical" href="http://example.com/2023/02/09/torchtext/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome : false,
+    isPost : true,
+    lang   : 'en'
+  };
+</script>
+
+  <title>torchtext | Hexo</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+<!-- hexo injector head_end start -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css">
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/hexo-math@4.0.0/dist/style.css">
+<!-- hexo injector head_end end --><style>mjx-container[jax="SVG"] {
+  direction: ltr;
+}
+
+mjx-container[jax="SVG"] > svg {
+  overflow: visible;
+}
+
+mjx-container[jax="SVG"][display="true"] {
+  display: block;
+  text-align: center;
+  margin: 1em 0;
+}
+
+mjx-container[jax="SVG"][justify="left"] {
+  text-align: left;
+}
+
+mjx-container[jax="SVG"][justify="right"] {
+  text-align: right;
+}
+
+g[data-mml-node="merror"] > g {
+  fill: red;
+  stroke: red;
+}
+
+g[data-mml-node="merror"] > rect[data-background] {
+  fill: yellow;
+  stroke: none;
+}
+
+g[data-mml-node="mtable"] > line[data-line] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > rect[data-frame] {
+  stroke-width: 70px;
+  fill: none;
+}
+
+g[data-mml-node="mtable"] > .mjx-dashed {
+  stroke-dasharray: 140;
+}
+
+g[data-mml-node="mtable"] > .mjx-dotted {
+  stroke-linecap: round;
+  stroke-dasharray: 0,140;
+}
+
+g[data-mml-node="mtable"] > svg {
+  overflow: visible;
+}
+
+[jax="SVG"] mjx-tool {
+  display: inline-block;
+  position: relative;
+  width: 0;
+  height: 0;
+}
+
+[jax="SVG"] mjx-tool > mjx-tip {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+mjx-tool > mjx-tip {
+  display: inline-block;
+  padding: .2em;
+  border: 1px solid #888;
+  font-size: 70%;
+  background-color: #F8F8F8;
+  color: black;
+  box-shadow: 2px 2px 5px #AAAAAA;
+}
+
+g[data-mml-node="maction"][data-toggle] {
+  cursor: pointer;
+}
+
+mjx-status {
+  display: block;
+  position: fixed;
+  left: 1em;
+  bottom: 1em;
+  min-width: 25%;
+  padding: .2em .4em;
+  border: 1px solid #888;
+  font-size: 90%;
+  background-color: #F8F8F8;
+  color: black;
+}
+
+foreignObject[data-mjx-xml] {
+  font-family: initial;
+  line-height: normal;
+  overflow: visible;
+}
+
+.MathJax path {
+  stroke-width: 3;
+}
+
+mjx-container[display="true"] {
+  overflow: auto hidden;
+}
+
+mjx-container[display="true"] + br {
+  display: none;
+}
+</style></head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <span class="logo-line-before"><i></i></span>
+      <h1 class="site-title">Hexo</h1>
+      <span class="logo-line-after"><i></i></span>
+    </a>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+<nav class="site-nav">
+  <ul id="menu" class="main-menu menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-home fa-fw"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-archives">
+
+    <a href="/archives/" rel="section"><i class="fa fa-archive fa-fw"></i>Archives</a>
+
+  </li>
+  </ul>
+</nav>
+
+
+
+
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content post posts-expand">
+            
+
+    
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="en">
+    <link itemprop="mainEntityOfPage" href="http://example.com/2023/02/09/torchtext/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="John Doe">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Hexo">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          torchtext
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-02-09 14:01:32" itemprop="dateCreated datePublished" datetime="2023-02-09T14:01:32+08:00">2023-02-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-02-10 11:27:41" itemprop="dateModified" datetime="2023-02-10T11:27:41+08:00">2023-02-10</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>将一个纯文本数据(比如一个 txt 文本)，
+变成一个模型可接受的数据（比如一个 embedding
+序列），就用到了torchtext。</p>
+<p>用torchtext处理文本数据的流程如下图所示（以判断句子情感为例）。</p>
+<img src="/2023/02/09/torchtext/image-20230112163114539.png" class="" title="image-20230112163114539">
+<h3 id="api一览">API一览</h3>
+<figure class="highlight ini"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">torchtext.data.Example : 用来表示一个样本，数据+标签</span><br><span class="line">torchtext.vocab.Vocab: 词汇表相关</span><br><span class="line">torchtext.data.Datasets: 数据集类，__getitem__ 返回 Example实例</span><br><span class="line">torchtext.data.Field : 用来定义字段的处理方法（文本字段，标签字段）</span><br><span class="line">torchtext.data.Iterator: 迭代器，用来生成 batch</span><br><span class="line">torchtext.datasets: 包含了常见的数据集.</span><br></pre></td></tr></table></figure>
+<h3 id="torchtext介绍">1 torchtext介绍</h3>
+<p>torchtext主要包含的组件有：Field、Dataset和Iterator。</p>
+<h4 id="field">1.1 Field</h4>
+<p>Field是用于处理数据的对象，处理的过程通过参数指定，且通过Filed能够得到Example对象。下面是定义Field对象的例子，</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">TEXT = data.Field(sequential=<span class="literal">True</span>, tokenize=tokenize, lower=<span class="literal">True</span>, fix_length=<span class="number">200</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="dataset">1.2 Dataset</h4>
+<p>继承自pytorch的Dataset，表示数据集。Dataset可以看做是Example的实例集合；</p>
+<h4 id="iterator">1.3 Iterator</h4>
+<p>Iterator是torchtext到模型的输出，它提供了对数据的一般处理方式，比如打乱，排序，等等，可以动态修改batch大小</p>
+<h3 id="quick-start">2 Quick Start</h3>
+<h4 id="导入库">2.0 导入库</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> pandas <span class="keyword">as</span> pd</span><br><span class="line"><span class="keyword">import</span> torch</span><br><span class="line"><span class="keyword">from</span> torchtext.legacy <span class="keyword">import</span> data</span><br><span class="line"><span class="keyword">from</span> torchtext.vocab <span class="keyword">import</span> Vectors</span><br><span class="line"><span class="keyword">from</span> torchtext.legacy.data <span class="keyword">import</span> TabularDataset,Dataset,BucketIterator,Iterator</span><br><span class="line"><span class="keyword">from</span> torch.nn <span class="keyword">import</span> init</span><br><span class="line"><span class="keyword">from</span> tqdm <span class="keyword">import</span> tqdm</span><br></pre></td></tr></table></figure>
+<h4 id="展示数据格式">2.1 展示数据格式</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">df1 = pd.read_csv(<span class="string">'./data/train_one_label.csv'</span>).head()</span><br><span class="line">df2 = pd.read_csv(<span class="string">'./data/test.csv'</span>).head()</span><br><span class="line"><span class="built_in">print</span>(df1)</span><br><span class="line"><span class="built_in">print</span>(df2)</span><br></pre></td></tr></table></figure>
+<p>train_one_label.csv前6行</p>
+<table>
+<colgroup>
+<col style="width: 5%">
+<col style="width: 21%">
+<col style="width: 66%">
+<col style="width: 6%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>id</th>
+<th>comment_text</th>
+<th>toxic</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>0000997932d77bf</td>
+<td>Explanation Why this edits make under my usern</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>000103f0d9cfb60f</td>
+<td>D'aww! He matches this background colour I'm s...</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>000113f07ec002fd</td>
+<td>Hey man, I'm really not trying to edit war. It...</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>0001b41b1c6bb37e</td>
+<td>can't make any real suggestions on ...</td>
+<td>0</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>0001d958c54c6e35</td>
+<td>You, sir, are my hero. Any chance you remember...</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+<p>test.csv前6行</p>
+<table>
+<colgroup>
+<col style="width: 5%">
+<col style="width: 23%">
+<col style="width: 71%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>id</th>
+<th>comment_text</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0</td>
+<td>00001cee341fdb12</td>
+<td>Yo bitch Ja Rule is more succesful then you'll...</td>
+</tr>
+<tr class="even">
+<td>1</td>
+<td>0000247867823ef7</td>
+<td>== From RfC == The title is fine as it is...</td>
+</tr>
+<tr class="odd">
+<td>2</td>
+<td>00013b17ad220c46</td>
+<td>== Sources == Zawe Ashton on Lap...</td>
+</tr>
+<tr class="even">
+<td>3</td>
+<td>00017563c3f7919a</td>
+<td>:If you have a look back at the source, the in...</td>
+</tr>
+<tr class="odd">
+<td>4</td>
+<td>00017695ad8997eb</td>
+<td>I don't anonymously edit articles at all.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="定义field">2.2 定义Field</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">tokenize = <span class="keyword">lambda</span> x: x.split() <span class="comment"># tokenize指定如何划分句子</span></span><br><span class="line"><span class="comment"># 定义了两种Filed，分别用于处理文本和标签</span></span><br><span class="line">TEXT = data.Field(sequential=<span class="literal">True</span>, tokenize=tokenize, lower=<span class="literal">True</span>, fix_length=<span class="number">200</span>)</span><br><span class="line">LABEL = data.Field(sequential=<span class="literal">False</span>, use_vocab=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+<h4 id="构建dataset">2.3 构建Dataset</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">fields = [(<span class="string">"id"</span>, <span class="literal">None</span>),(<span class="string">"comment_text"</span>,TEXT),(<span class="string">"toxic"</span>,LABEL)] <span class="comment"># 列名与对应的Field对象</span></span><br><span class="line"><span class="comment"># TabularDataset：从csv、tsv、json的文件中读取数据并生成dataset</span></span><br><span class="line">train, valid = TabularDataset.splits(</span><br><span class="line">    path=<span class="string">'data'</span>,</span><br><span class="line">    train=<span class="string">'train_one_label.csv'</span>,</span><br><span class="line">    validation=<span class="string">'valid_one_label.csv'</span>,</span><br><span class="line">    <span class="built_in">format</span>=<span class="string">'csv'</span>,</span><br><span class="line">    skip_header=<span class="literal">True</span>,</span><br><span class="line">    fields=fields)</span><br><span class="line"></span><br><span class="line">test_datafields = [(<span class="string">'id'</span>, <span class="literal">None</span>),(<span class="string">'comment_text'</span>, TEXT)]</span><br><span class="line"></span><br><span class="line">test = TabularDataset(</span><br><span class="line">    path=<span class="string">r'data\test.csv'</span>,</span><br><span class="line">    <span class="built_in">format</span>=<span class="string">'csv'</span>,</span><br><span class="line">    skip_header=<span class="literal">True</span>,</span><br><span class="line">    fields=test_datafields</span><br><span class="line">)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">type</span>(train))</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="keyword">class</span> <span class="string">'torchtext.legacy.data.dataset.TabularDataset'</span>&gt;</span><br></pre></td></tr></table></figure>
+<p><strong>构建词表vocab</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">TEXT.build_vocab(train,valid,test,vectors=<span class="string">'glove.6B.100d'</span>)</span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.stoi[<span class="string">'&lt;pad&gt;'</span>])</span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.stoi[<span class="string">'&lt;unk&gt;'</span>])</span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.itos[<span class="number">0</span>])</span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.freqs.most_common(<span class="number">5</span>))</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">vars</span>(train.examples[<span class="number">0</span>]))</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="number">1</span></span><br><span class="line"><span class="number">0</span></span><br><span class="line">&lt;unk&gt;</span><br><span class="line">[(<span class="string">'the'</span>, <span class="number">226</span>), (<span class="string">'to'</span>, <span class="number">137</span>), (<span class="string">'a'</span>, <span class="number">90</span>), (<span class="string">'is'</span>, <span class="number">84</span>), (<span class="string">'you'</span>, <span class="number">82</span>)]</span><br><span class="line">{<span class="string">'comment_text'</span>: [<span class="string">'explanation'</span>, <span class="string">'why'</span>, <span class="string">'the'</span>, <span class="string">'edits'</span>, <span class="string">'made'</span>, <span class="string">'under'</span>, <span class="string">'my'</span>, <span class="string">'username'</span>, <span class="string">'hardcore'</span>, <span class="string">'metallica'</span>, <span class="string">'fan'</span>, <span class="string">'were'</span>, <span class="string">'reverted?'</span>, <span class="string">'they'</span>, <span class="string">"weren't"</span>, <span class="string">'vandalisms,'</span>, <span class="string">'just'</span>, <span class="string">'closure'</span>, <span class="string">'on'</span>, <span class="string">'some'</span>, <span class="string">'gas'</span>, <span class="string">'after'</span>, <span class="string">'i'</span>, <span class="string">'voted'</span>, <span class="string">'at'</span>, <span class="string">'new'</span>, <span class="string">'york'</span>, <span class="string">'dolls'</span>, <span class="string">'fac.'</span>, <span class="string">'and'</span>, <span class="string">'please'</span>, <span class="string">"don't"</span>, <span class="string">'remove'</span>, <span class="string">'the'</span>, <span class="string">'template'</span>, <span class="string">'from'</span>, <span class="string">'the'</span>, <span class="string">'talk'</span>, <span class="string">'page'</span>, <span class="string">'since'</span>, <span class="string">"i'm"</span>, <span class="string">'retired'</span>, <span class="string">'now.89.205.38.27'</span>], <span class="string">'toxic'</span>: <span class="string">'0'</span>}</span><br></pre></td></tr></table></figure>
+<h4 id="生成迭代器">2.4 生成迭代器</h4>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">train_iter, valid_iter = BucketIterator.splits(</span><br><span class="line">    (train, valid),</span><br><span class="line">    batch_sizes=(<span class="number">8</span>, <span class="number">8</span>),</span><br><span class="line">    device=<span class="string">"cpu"</span>,</span><br><span class="line">    sort_key=<span class="keyword">lambda</span> x: <span class="built_in">len</span>(x.comment_text),</span><br><span class="line">    sort_within_batch=<span class="literal">False</span>,</span><br><span class="line">    repeat=<span class="literal">False</span></span><br><span class="line">)</span><br><span class="line">test_iter = Iterator(test, batch_size=<span class="number">8</span>, device=<span class="string">"cpu"</span>, sort=<span class="literal">False</span>, sort_within_batch=<span class="literal">False</span>, repeat=<span class="literal">False</span>)</span><br></pre></td></tr></table></figure>
+<p><strong>调用迭代器</strong></p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> idx, batch <span class="keyword">in</span> <span class="built_in">enumerate</span>(train_iter):</span><br><span class="line">    <span class="built_in">print</span>(batch)</span><br><span class="line">    <span class="built_in">print</span>(batch.__dict__.keys())</span><br><span class="line">    text, label = batch.comment_text, batch.toxic</span><br><span class="line">    <span class="built_in">print</span>(text.shape, label.shape)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 200是最大句子长度，在Field中指定</span></span><br><span class="line">[torchtext.data.batch.Batch of size <span class="number">1</span>]</span><br><span class="line">	[.comment_text]:[torch.LongTensor of size 200x1]</span><br><span class="line">	[.toxic]:[torch.LongTensor of size <span class="number">1</span>]</span><br><span class="line">dict_keys([<span class="string">'batch_size'</span>, <span class="string">'dataset'</span>, <span class="string">'fields'</span>, <span class="string">'input_fields'</span>, <span class="string">'target_fields'</span>, <span class="string">'comment_text'</span>, <span class="string">'toxic'</span>])</span><br><span class="line">torch.Size([<span class="number">200</span>, <span class="number">1</span>]) torch.Size([<span class="number">1</span>])</span><br><span class="line"></span><br><span class="line">[torchtext.data.batch.Batch of size <span class="number">8</span>]</span><br><span class="line">	[.comment_text]:[torch.LongTensor of size 200x8]</span><br><span class="line">	[.toxic]:[torch.LongTensor of size <span class="number">8</span>]</span><br><span class="line">dict_keys([<span class="string">'batch_size'</span>, <span class="string">'dataset'</span>, <span class="string">'fields'</span>, <span class="string">'input_fields'</span>, <span class="string">'target_fields'</span>, <span class="string">'comment_text'</span>, <span class="string">'toxic'</span>])</span><br><span class="line">torch.Size([<span class="number">200</span>, <span class="number">8</span>]) torch.Size([<span class="number">8</span>])</span><br><span class="line"></span><br><span class="line">[torchtext.data.batch.Batch of size <span class="number">8</span>]</span><br><span class="line">	[.comment_text]:[torch.LongTensor of size 200x8]</span><br><span class="line">	[.toxic]:[torch.LongTensor of size <span class="number">8</span>]</span><br><span class="line">dict_keys([<span class="string">'batch_size'</span>, <span class="string">'dataset'</span>, <span class="string">'fields'</span>, <span class="string">'input_fields'</span>, <span class="string">'target_fields'</span>, <span class="string">'comment_text'</span>, <span class="string">'toxic'</span>])</span><br><span class="line">torch.Size([<span class="number">200</span>, <span class="number">8</span>]) torch.Size([<span class="number">8</span>])</span><br><span class="line"></span><br><span class="line">[torchtext.data.batch.Batch of size <span class="number">8</span>]</span><br><span class="line">	[.comment_text]:[torch.LongTensor of size 200x8]</span><br><span class="line">	[.toxic]:[torch.LongTensor of size <span class="number">8</span>]</span><br><span class="line">dict_keys([<span class="string">'batch_size'</span>, <span class="string">'dataset'</span>, <span class="string">'fields'</span>, <span class="string">'input_fields'</span>, <span class="string">'target_fields'</span>, <span class="string">'comment_text'</span>, <span class="string">'toxic'</span>])</span><br><span class="line">torch.Size([<span class="number">200</span>, <span class="number">8</span>]) torch.Size([<span class="number">8</span>])</span><br></pre></td></tr></table></figure>
+<h3 id="field详解">3 Field详解</h3>
+<h4 id="参数说明">参数说明</h4>
+<blockquote>
+<p>squential：数据是否为序列数据，默认为Ture。如果为False，则不能使用分词。</p>
+<p>use_vocab：是否使用词典，默认为True。如果为False，那么输入的数据类型必须是数值类型(即使用vocab转换后的)。</p>
+<p>init_token：文本的起始字符，默认为None。若有指定token则将该token添加到句子头部</p>
+<p>eos_token：文本的结束字符，默认为None。若有指定token则将该token添加到句子尾部</p>
+<p>fix_length：所有样本的长度，不够则使用pad_token补全。默认为None，表示灵活长度。</p>
+<p>tensor_type：把数据转换成的tensor类型 默认值为torch.LongTensor。</p>
+<p>preprocessing：预处理pipeline，
+用于分词之后、数值化之前，默认值为None。</p>
+<p>postprocessing：后处理pipeline，用于数值化之后、转换为tensor之前，默认为None。</p>
+<p>lower：是否把数据转换为小写，默认为False；</p>
+<p>tokenize：分词函数，默认为str.split</p>
+<p>include_lengths：是否返回一个已经补全的最小batch的元组和和一个包含每条数据长度的列表，默认值为False。</p>
+<p>batch_first：batch作为第一个维度；</p>
+<p>pad_token：用于补全的字符，默认为<pad>。</pad></p>
+<p>unk_token：替换袋外词的字符，默认为<unk>。</unk></p>
+<p>pad_first：是否从句子的开头进行补全，默认为False；</p>
+<p>truncate_first：是否从句子的开头截断句子，默认为False；</p>
+<p>stop_words：停用词；</p>
+</blockquote>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 1.数据</span></span><br><span class="line">corpus = [<span class="string">"D'aww! He matches this background colour"</span>,</span><br><span class="line">         <span class="string">"Yo bitch Ja Rule is more succesful then"</span>,</span><br><span class="line">         <span class="string">"If you have a look back at the source"</span>]</span><br><span class="line">labels = [<span class="number">0</span>,<span class="number">1</span>,<span class="number">0</span>]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 2.定义不同的Field</span></span><br><span class="line">TEXT = Field(sequential=<span class="literal">True</span>, lower=<span class="literal">True</span>, fix_length=<span class="number">10</span>,tokenize=<span class="built_in">str</span>.split,batch_first=<span class="literal">True</span>)</span><br><span class="line">LABEL = Field(sequential=<span class="literal">False</span>, use_vocab=<span class="literal">False</span>)</span><br><span class="line">fields = [(<span class="string">"comment"</span>, TEXT),(<span class="string">"label"</span>,LABEL)]</span><br><span class="line"></span><br><span class="line"><span class="comment"># 3.将数据转换为Example对象的列表</span></span><br><span class="line">examples = []</span><br><span class="line"><span class="keyword">for</span> text,label <span class="keyword">in</span> <span class="built_in">zip</span>(corpus,labels):</span><br><span class="line">    example = Example.fromlist([text,label],fields=fields)</span><br><span class="line">    examples.append(example)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">type</span>(examples[<span class="number">0</span>]))	<span class="comment"># &lt;class 'torchtext.data.example.Example'&gt;</span></span><br><span class="line"><span class="built_in">print</span>(examples[<span class="number">0</span>].comment)	<span class="comment"># ["d'aww!", 'he', 'matches', 'this', 'background', 'colour']</span></span><br><span class="line"><span class="built_in">print</span>(examples[<span class="number">0</span>].label)	<span class="comment"># 0</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># 4.构建词表</span></span><br><span class="line">new_corpus = [example.comment <span class="keyword">for</span> example <span class="keyword">in</span> examples]</span><br><span class="line">TEXT.build_vocab(new_corpus)</span><br><span class="line"><span class="built_in">print</span>(TEXT.process(new_corpus))</span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="string">tensor([[ 8, 10, 15, 22,  5,  7,  1,  1,  1,  1],</span></span><br><span class="line"><span class="string">        [23,  6, 13, 17, 12, 16, 19, 21,  1,  1],</span></span><br><span class="line"><span class="string">        [11, 24,  9,  2, 14,  4,  3, 20, 18,  1]])</span></span><br><span class="line"><span class="string">'''</span></span><br><span class="line"><span class="comment"># 1是填充字符</span></span><br></pre></td></tr></table></figure>
+<h4 id="tokenize">Tokenize</h4>
+<p>Field中的参数tokenize必须是一个函数，其作用是给定一个字符串，该函数以列表的形式返回分词结果。这里以jieba分词为例：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">import</span> jieba</span><br><span class="line"><span class="comment"># jieba分词返回的是迭代器，因此不能直接作为tokenize</span></span><br><span class="line"><span class="built_in">print</span>(jieba.cut(<span class="string">"我爱北京天安门"</span>))</span><br><span class="line"><span class="comment"># 使用lambda定义新的函数cut，其直接返回分词结果的列表，这样才可以作为tokenize</span></span><br><span class="line">cut = <span class="keyword">lambda</span> x:<span class="built_in">list</span>(jieba.cut(x))</span><br><span class="line">cut(<span class="string">"我爱北京天安门"</span>)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;generator <span class="built_in">object</span> Tokenizer.cut at <span class="number">0x000002038CEFF938</span>&gt;</span><br><span class="line">[<span class="string">'我'</span>, <span class="string">'爱'</span>, <span class="string">'北京'</span>, <span class="string">'天安门'</span>]</span><br></pre></td></tr></table></figure>
+<h4 id="vocab">Vocab</h4>
+<img src="/2023/02/09/torchtext/image-20230112163114539.png" class="" title="image-20230112163114539">
+<p>前面的代码中Field对象TEXT通过调用<code>build_vocab()</code>方法来生成一个内置的Vocab对象，即<code>TEXT.build_vocab(new_corpus)</code>。下面看一下Vocab对象的常见用法：</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">print</span>(<span class="built_in">type</span>(TEXT.vocab.freqs)) <span class="comment"># freqs是一个Counter对象，包含了词表中单词的计数信息</span></span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.freqs[<span class="string">'at'</span>])</span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.itos[<span class="number">1</span>]) <span class="comment"># itos表示index to str</span></span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.stoi[<span class="string">'&lt;unk&gt;'</span>]) <span class="comment"># stoi表示str to index</span></span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.unk_index)</span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.vectors) <span class="comment"># 词向量</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="keyword">class</span> <span class="string">'collections.Counter'</span>&gt;</span><br><span class="line"><span class="number">1</span></span><br><span class="line">&lt;pad&gt;</span><br><span class="line"><span class="number">0</span></span><br><span class="line"><span class="number">0</span></span><br><span class="line"><span class="literal">None</span></span><br></pre></td></tr></table></figure>
+<h4 id="vectors">Vectors</h4>
+<img src="/2023/02/09/torchtext/image-20230112163114539.png" class="" title="image-20230112163114539">
+<p>可以看到<code>TEXT.vocab.vectors</code>为None，因为在<code>build_vocab()</code>没有指定参数vectors，此时可以通过<code>load_vectors</code>方法来加载词向量。<code>load_vectors</code>的参数可以是字符串(例如:<code>“fasttext.en.300d”</code>)，其会自动下载词向量并缓存到本地。但如果是自己训练的词向量，则需要指定词向量在本地的路径。</p>
+<p>自动下载并加载词向量</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">TEXT.vocab.load_vectors(<span class="string">'fasttext.en.300d'</span>)</span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.vectors.shape)		<span class="comment"># torch.Size([25, 300]) tokenizer从corpus中分出了25个词，所以这里是25，300d是指词向量的维度</span></span><br></pre></td></tr></table></figure>
+<p>加载本地词向量</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">p = os.path.expanduser(<span class="string">"~\\.vector_cache\\sgns.wiki.bigram-char"</span>)</span><br><span class="line">TEXT.vocab.load_vectors(vocab.Vectors(p))</span><br></pre></td></tr></table></figure>
+<h4 id="自定义field">自定义Field</h4>
+<p>这里自定义Field，其通过字符串(例如:“nltk”、“jieba”、“str”)等方式指定tokenize，并且能够通过名称来指定自定义的词向量。</p>
+<ol type="1">
+<li>定义</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> <span class="title class_">MyField</span>(<span class="title class_ inherited__">Field</span>):</span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">__init__</span>(<span class="params">self, tokenize=<span class="string">"nltk"</span>, **kwargs</span>):</span><br><span class="line">        self.tokenize_name = tokenize</span><br><span class="line">        tokenize = MyField._get_tokenizer(tokenize)</span><br><span class="line">        <span class="built_in">super</span>(MyField, self).__init__(tokenize=tokenize, **kwargs)</span><br><span class="line"></span><br><span class="line"><span class="meta">    @staticmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_get_tokenizer</span>(<span class="params">tokenizer</span>):</span><br><span class="line">        <span class="keyword">if</span> tokenizer == <span class="string">"nltk"</span>:</span><br><span class="line">            <span class="keyword">return</span> nltk.word_tokenize</span><br><span class="line">        <span class="keyword">elif</span> tokenizer == <span class="string">"jieba"</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="keyword">lambda</span> x : <span class="built_in">list</span>(jieba.cut(x))</span><br><span class="line">        <span class="keyword">elif</span> tokenizer == <span class="string">"split"</span>:</span><br><span class="line">            <span class="keyword">return</span> <span class="built_in">str</span>.split</span><br><span class="line">        <span class="keyword">else</span>:</span><br><span class="line">            <span class="keyword">raise</span> ValueError(<span class="string">"不支持的tokenizer"</span>)</span><br><span class="line"></span><br><span class="line"><span class="meta">    @classmethod</span></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">_get_vector_data</span>(<span class="params">cls, vecs</span>):</span><br><span class="line">        <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">isinstance</span>(vecs, <span class="built_in">list</span>):</span><br><span class="line">            vecs = [vecs]</span><br><span class="line">        </span><br><span class="line">        vec_datas = []</span><br><span class="line">        <span class="keyword">for</span> vec <span class="keyword">in</span> vecs:</span><br><span class="line">            <span class="keyword">if</span> <span class="keyword">not</span> <span class="built_in">isinstance</span>(vec, vocab.Vectors):</span><br><span class="line">                <span class="keyword">if</span> vec == <span class="string">"fasttext"</span>:</span><br><span class="line">                    embed_file = os.path.expanduser(<span class="string">"~\\.vector_cache\\wiki-news-300d-1M.vec"</span>)</span><br><span class="line">                    vec_data = vocab.Vectors(embed_file)</span><br><span class="line">                <span class="keyword">elif</span> vec == <span class="string">"sgns"</span>:</span><br><span class="line">                    embed_file = os.path.expanduser(<span class="string">"~\\.vector_cache\\sgns.wiki.bigram-char"</span>)</span><br><span class="line">                    vec_data = vocab.Vectors(embed_file)</span><br><span class="line">                <span class="keyword">else</span>:</span><br><span class="line">                    <span class="keyword">raise</span> ValueError(<span class="string">"不支持的词向量类型"</span>)</span><br><span class="line">                vec_datas.append(vec_data)</span><br><span class="line">            <span class="keyword">else</span>:</span><br><span class="line">                vec_datas.append(vec)</span><br><span class="line">        <span class="keyword">return</span> vec_datas</span><br><span class="line"></span><br><span class="line">    <span class="keyword">def</span> <span class="title function_">build_vocab</span>(<span class="params">self, *args, vectors=<span class="literal">None</span>, **kwargs</span>):</span><br><span class="line">        <span class="keyword">if</span> vectors <span class="keyword">is</span> <span class="keyword">not</span> <span class="literal">None</span>:</span><br><span class="line">            vectors = MyField._get_vector_data(vectors)</span><br><span class="line">        <span class="built_in">super</span>(MyField, self).build_vocab(*args, vectors=vectors, **kwargs)</span><br></pre></td></tr></table></figure>
+<ol start="2" type="1">
+<li>调用</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">corpus = [<span class="string">"D'aww! He matches this background colour"</span>,</span><br><span class="line">         <span class="string">"Yo bitch Ja Rule is more succesful then"</span>,</span><br><span class="line">         <span class="string">"If you have a look back at the source"</span>]</span><br><span class="line">TEXT = MyField(sequential=<span class="literal">True</span>, lower=<span class="literal">True</span>, fix_length=<span class="number">10</span>,tokenize=<span class="string">"jieba"</span>,batch_first=<span class="literal">True</span>)</span><br><span class="line">fields = [(<span class="string">"comment"</span>, TEXT)]</span><br><span class="line">examples = []</span><br><span class="line"><span class="keyword">for</span> text <span class="keyword">in</span> corpus:</span><br><span class="line">    example = Example.fromlist([text],fields=fields)</span><br><span class="line">    examples.append(example)</span><br><span class="line">data = Dataset(examples, fields)</span><br><span class="line">TEXT.build_vocab(data, vectors=<span class="string">"sgns"</span>)</span><br><span class="line"><span class="built_in">print</span>(<span class="built_in">len</span>(TEXT.vocab.freqs))</span><br><span class="line"><span class="built_in">print</span>(TEXT.vocab.vectors.shape)</span><br></pre></td></tr></table></figure>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;<span class="keyword">class</span> <span class="string">'torchtext.vocab.Vectors'</span>&gt;</span><br><span class="line"><span class="number">27</span></span><br><span class="line">torch.Size([<span class="number">29</span>, <span class="number">300</span>])</span><br></pre></td></tr></table></figure>
+<h1 id="参考来源">参考来源</h1>
+<p>https://blog.csdn.net/lijiaqi0612/article/details/95355884</p>
+<p>https://baiqw.blog.csdn.net/article/details/109149646</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/02/09/Embedding/" rel="prev" title="Embedding">
+      <i class="fa fa-chevron-left"></i> Embedding
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/02/12/VAE/" rel="next" title="VAE">
+      VAE <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let { activeClass } = CONFIG.comments;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#api%E4%B8%80%E8%A7%88"><span class="nav-number">1.</span> <span class="nav-text">API一览</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#torchtext%E4%BB%8B%E7%BB%8D"><span class="nav-number">2.</span> <span class="nav-text">1 torchtext介绍</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#field"><span class="nav-number">2.1.</span> <span class="nav-text">1.1 Field</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#dataset"><span class="nav-number">2.2.</span> <span class="nav-text">1.2 Dataset</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#iterator"><span class="nav-number">2.3.</span> <span class="nav-text">1.3 Iterator</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#quick-start"><span class="nav-number">3.</span> <span class="nav-text">2 Quick Start</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AF%BC%E5%85%A5%E5%BA%93"><span class="nav-number">3.1.</span> <span class="nav-text">2.0 导入库</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%B1%95%E7%A4%BA%E6%95%B0%E6%8D%AE%E6%A0%BC%E5%BC%8F"><span class="nav-number">3.2.</span> <span class="nav-text">2.1 展示数据格式</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%AE%9A%E4%B9%89field"><span class="nav-number">3.3.</span> <span class="nav-text">2.2 定义Field</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%9E%84%E5%BB%BAdataset"><span class="nav-number">3.4.</span> <span class="nav-text">2.3 构建Dataset</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E7%94%9F%E6%88%90%E8%BF%AD%E4%BB%A3%E5%99%A8"><span class="nav-number">3.5.</span> <span class="nav-text">2.4 生成迭代器</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#field%E8%AF%A6%E8%A7%A3"><span class="nav-number">4.</span> <span class="nav-text">3 Field详解</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E8%AF%B4%E6%98%8E"><span class="nav-number">4.1.</span> <span class="nav-text">参数说明</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#tokenize"><span class="nav-number">4.2.</span> <span class="nav-text">Tokenize</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#vocab"><span class="nav-number">4.3.</span> <span class="nav-text">Vocab</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#vectors"><span class="nav-number">4.4.</span> <span class="nav-text">Vectors</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E8%87%AA%E5%AE%9A%E4%B9%89field"><span class="nav-number">4.5.</span> <span class="nav-text">自定义Field</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%9D%A5%E6%BA%90"><span class="nav-number"></span> <span class="nav-text">参考来源</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">John Doe</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">14</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+  </nav>
+</div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+        
+
+<div class="copyright">
+  
+  &copy; 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">John Doe</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://muse.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Muse</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="/lib/velocity/velocity.min.js"></script>
+  <script src="/lib/velocity/velocity.ui.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+<script src="/js/motion.js"></script>
+
+
+<script src="/js/schemes/muse.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+      
+
+<script>
+  if (typeof MathJax === 'undefined') {
+    window.MathJax = {
+      loader: {
+        source: {
+          '[tex]/amsCd': '[tex]/amscd',
+          '[tex]/AMScd': '[tex]/amscd'
+        }
+      },
+      tex: {
+        inlineMath: {'[+]': [['$', '$']]},
+        tags: 'ams'
+      },
+      options: {
+        renderActions: {
+          findScript: [10, doc => {
+            document.querySelectorAll('script[type^="math/tex"]').forEach(node => {
+              const display = !!node.type.match(/; *mode=display/);
+              const math = new doc.options.MathItem(node.textContent, doc.inputJax[0], display);
+              const text = document.createTextNode('');
+              node.parentNode.replaceChild(text, node);
+              math.start = {node: text, delim: '', n: 0};
+              math.end = {node: text, delim: '', n: 0};
+              doc.math.push(math);
+            });
+          }, '', false],
+          insertedScript: [200, () => {
+            document.querySelectorAll('mjx-container').forEach(node => {
+              let target = node.parentNode;
+              if (target.nodeName.toLowerCase() === 'li') {
+                target.parentNode.classList.add('has-jax');
+              }
+            });
+          }, '', false]
+        }
+      }
+    };
+    (function () {
+      var script = document.createElement('script');
+      script.src = '//cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js';
+      script.defer = true;
+      document.head.appendChild(script);
+    })();
+  } else {
+    MathJax.startup.document.state(0);
+    MathJax.texReset();
+    MathJax.typeset();
+  }
+</script>
+
+    
+
+  
+
+</body>
+</html>
