@@ -292,7 +292,7 @@ mjx-container[display="true"] + br {
                   <i class="far fa-calendar-check"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-06-26 16:44:16" itemprop="dateModified" datetime="2023-06-26T16:44:16+08:00">2023-06-26</time>
+                <time title="Modified: 2023-06-27 10:56:30" itemprop="dateModified" datetime="2023-06-27T10:56:30+08:00">2023-06-27</time>
               </span>
 
           
@@ -671,7 +671,40 @@ mjx-container[display="true"] + br {
 <p>除了不同的ML模型之外，还有一种趋势是利用可选数据来提高预测性能。例如，经济新闻[57]，价格频率[158]，社交媒体[151]，金融事件[33]，投资行为[23]和天气信息[164]被用作了解金融资产内在模式的额外信息。图形神经网络已被引入到股票之间的关系建模[24，80，110，150]。还提出了混合方法以进一步提高预测性能[58，86]。</p>
 <h2 id="Enhancing-Traditional-Methods-with-ML"><a href="#Enhancing-Traditional-Methods-with-ML" class="headerlink" title="Enhancing Traditional Methods with ML"></a>Enhancing Traditional Methods with ML</h2><p>另一个研究方向是用ML技术增强传统的基于规则的方法。Lim等人[83]通过深度学习增强了time-series momentum。Takeuchi和Lee [129]应用神经网络来增强cross section momentum。Chauhan等人[22]考虑到了基于因素模型的不确定性和前瞻性。Alphastock [138]提出了一种深度强化注意力网络，以改进classic buying-winners-and-selling-losers策略[63]。Gu等人探讨了机器学习技术在资产定价方面的能力。在[49]中，提出了用于资产定价的autoencoder架构。与纯ML方法相比，这些方法保留了原有的金融洞察力(financial insight)，具有更好的解释性。</p>
 <p>尽管有监督的机器学习方法结合特征工程技术在金融预测方面取得了巨大成功，但准确的预测和有利可图的交易行为之间仍然存在不可忽视的差距。RL方法可以通过学习端到端代理来解决这一障碍，该agent将市场信息直接映射到交易行为中。在下一节中，我们将讨论用于QT任务的著名RL方法，以及为什么它们优于传统方法。</p>
+<h1 id="Reinforcement-Learning-For-Quantitative-Trading"><a href="#Reinforcement-Learning-For-Quantitative-Trading" class="headerlink" title="Reinforcement Learning For Quantitative Trading"></a>Reinforcement Learning For Quantitative Trading</h1><p>在本节中，我们将对值得注意的基于RL的QT方法进行全面综述。我们通过四个主流QT任务的现有工作，并在每个小节的末尾提供一个总结表。</p>
+<h2 id="Categories-of-RL-based-QT-Models"><a href="#Categories-of-RL-based-QT-Models" class="headerlink" title="Categories of RL-based QT Models"></a>Categories of RL-based QT Models</h2><img src="/2023/06/24/QuantitativeTrading/image-20230627094158173.png" class="" title="image-20230627094158173">
 
+<p>Q-learning和Recurrent RL是QT任务中最流行的RL算法。</p>
+<p>最近的趋势表明DRL方法，如DQN，DDPG和PPO优于传统的RL方法。</p>
+<img src="/2023/06/24/QuantitativeTrading/image-20230627094218426.png" class="" title="image-20230627094218426">
+
+<p>美国市场是文献中研究最多的市场。中国市场近年来越来越受欢迎。对欧洲市场的研究主要是在早期时代。</p>
+<p>超过40%的文献研究股票数据。股票指数是第二受欢迎的选择。近年来也有一些专注于加密货币的研究。</p>
+<p>大约有一半的论文使用日级数据，因为它容易获取。对于订单执行(OE)和做市(MM)，细粒度数据（例如，秒级和分钟级）常用于模拟微观级金融市场。</p>
+<h2 id="RL-in-Algorithmic-Trading"><a href="#RL-in-Algorithmic-Trading" class="headerlink" title="RL in Algorithmic Trading"></a>RL in Algorithmic Trading</h2><p>算法交易是指利用计算机程序自动生成的信号交易一种特定的金融资产。它已广泛应用于各种金融资产的交易。在本小节中，我们将回顾大多数基于RL的算法交易论文，这些论文可以追溯到20世纪90年代。</p>
+<p><strong>Policy-based methods</strong></p>
+<p>为了解决监督学习方法的局限性，Moody和Wu [93]首次尝试将RL应用于算法交易。在本文中用recurrent RL(<strong>RRL</strong>)训练了一个agent来直接优化总体收益。设计了一种叫做差分夏普比的新评价指标作为优化目标以提高性能。人造价格数据的实证研究表明，它优于以往的forecasting-based方法。基于相同的算法，使用月度S&amp;P stock index数据[94]和美元/英磅汇率数据[92]进行了进一步的实验。</p>
+<p>作为RRL [93]的扩展，Dempster和Leemans [29]提出了具有三层的自适应RRL框架。第一层加入了14个技术指标作为额外的市场信息。第二层评估第一层的交易行为，并考虑风险因素。第三层的目标是在第二层中搜索最优的超参数。通过三层架构，它在欧元/美元汇率数据上的表现优于baselines。</p>
+<p>Vittori等人[136]提出了一种称为信赖域波动率优化（Trust Region Volatility Optimization, TRVO）的期权套期保值风险规避算法。TRVO训练了一批具有不同风险规避方法的agents, 能够跨越波动性-损益空间上的有效边界。模拟结果表明，TRVO优于经典的Black &amp; Scholes delta对冲[12]。</p>
+<p>随着深度学习的发展，算法交易中出现了一些<strong>DRL</strong>方法。</p>
+<p>FDDR [30]用深度神经网络增强了经典的RRL方法[94]。RNN层用于学习市场的有意义的递归表示。此外，提出了一种模糊扩展(fuzzy extension)，以进一步减少不确定性。FDDR在股票指数和商品期货上都取得了很好的表现。</p>
+<p>为了平衡利润和风险，提出了具有LSTM层的多目标RL方法[118]。通过同时优化利润和夏普比率，the agent 在三个中国股指期货上取得了更好的绩效。</p>
+<p><strong>Value-based methods</strong></p>
+<p>QSR [46]使用Q-learning分别优化绝对利润和相对风险调整利润。两个网络的组合被用来提高美元/德国马克汇率数据的性能。</p>
+<p>Lee和Jangmin [74]提出了一个用于股票交易的multi-agent Q-learning框架。设计了四个合作代理为买卖双方产生交易信号和订单价格。通过彼此共享训练片段和学习策略，与监督学习baselines相比，该方法在韩国股市的利润和风险管理方面都取得了更好的表现。</p>
+<p>在文献[62]中，作者首先基于动态规划和启发式规则设计了一些局部交易(local traders)者。随后，他们应用Q-learning来学习这些交易者在韩国股票市场上的meta policy。</p>
+<p>de Oliveira等人[27]实施了一种基于SARSA的RL方法，并在巴西市场的10只股票上进行了测试。</p>
+<p>DQN用于通过考虑交易频率、市场混乱(market confusion)和迁移学习来增强交易系统。交易频率通过三种方式确定：（1）关于Q-value的启发式函数（2）action-dependent NN regressor（3）action-independent NN regressor. 另一个启发式函数被应用于添加一个filter作为agent’s certainty on market condition。此外，作者在选定的成分股上训练agent，并将预训练权重作为不同股票指数的起点。通过对四个不同股票指数的实验验证了该框架的有效性。</p>
+<p>DeepScalper [125]应用分支决斗(branch dueling) Q-network [141]进行日内交易。提出一个encoder-decoder 架构来学习结合了微观和宏观层面市场信息的市场embedding。在reward function中增加了一个新的事后奖励(hindsight bonus)，以鼓励长期视野(horizon)。作者还设计了一个辅助任务，预测未来的波动性。DeepScalper在中国国债和股指市场上的表现明显优于许多基准。</p>
+<p>Riva等人[106]提出了一种value-based RL算法，通过fitted-Q迭代来训练agent进行外汇交易。研究了调谐控制频率(tuning control frequency)的重要性来获得有效的交易策略。</p>
+<p><strong>Other methods</strong></p>
+<p>iRDPG [87]是一个自适应的DPG-based框架。由于金融数据的噪声性质，作者将算法交易作为一个部分可观测马尔可夫决策过程（Partially Observable Markov Decision Process, POMDP）。在iRDPG中引入GRU层以学习recurrent market embedding。此外，作者将行为克隆应用于专家交易行为，以指导iRDPG在两个中国股指期货上取得了良好的业绩。</p>
+<p>也有一些作品专注于评估不同RL算法在其自身数据上的性能。Zhang等人[161]评估了DQN、PG和A2C在50个最具流动性的期货合约上的表现。Yuan等人[155]测试了PPO，DQN，和SAC在三个选定的股票上的表现。根据这两项工作，DQN在不同金融资产中取得了最佳的综合性能。</p>
+<p><strong>Summary</strong></p>
+<p>虽然现有的研究证明了RL在定量交易中的潜力，但似乎对不同RL算法的总体排名没有共识（值得注意的是，我们承认没有免费午餐定理的存在）。此外，大多数现有的基于RL的作品只关注general AT，试图通过交易一种资产来获利。在金融领域，大量的交易策略是基于交易频率设计的（例如，高频交易）和资产类型（例如，股票和加密货币）。</p>
+<img src="/2023/06/24/QuantitativeTrading/image-20230627105607674.png" class="" title="image-20230627105607674">
+
+<h2 id="RL-in-Portfolio-Management"><a href="#RL-in-Portfolio-Management" class="headerlink" title="RL in Portfolio Management"></a>RL in Portfolio Management</h2>
       
     </div>
 
